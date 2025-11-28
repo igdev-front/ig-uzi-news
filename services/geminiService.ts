@@ -1,11 +1,17 @@
-
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { NewsItem, ViralScript, Language } from "../types";
 
-// Setup Gemini Client
-// Note: In Vercel, ensure 'API_KEY' is set in Environment Variables
-const apiKey = process.env.API_KEY; 
-const genAI = new GoogleGenAI({ apiKey: apiKey || '' }); 
+// Safe API Key Access to prevent crashes if process is undefined
+const getApiKey = (): string => {
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.API_KEY || '';
+    }
+  } catch (e) {
+    // Ignore reference errors
+  }
+  return '';
+};
 
 // API KEYS
 const GNEWS_API_KEY = "84423fc4f35e5fc6615e22b416491858";
@@ -194,6 +200,8 @@ export const fetchNewsFeed = async (lang: Language): Promise<NewsItem[]> => {
   const model = "gemini-2.5-flash";
   const CACHE_KEY = getCacheKey(lang);
 
+  const apiKey = getApiKey();
+  
   // Check if API Key is configured
   if (!apiKey) {
     console.error("Gemini API Key is missing! Check your Vercel Environment Variables.");
@@ -203,6 +211,9 @@ export const fetchNewsFeed = async (lang: Language): Promise<NewsItem[]> => {
         date: new Date().toLocaleDateString(lang === 'PT' ? 'pt-BR' : 'en-US', { month: 'short', day: 'numeric' }),
     }));
   }
+
+  // Initialize GenAI here to avoid module-level crashes
+  const genAI = new GoogleGenAI({ apiKey });
 
   // 1. Check Cache
   const cachedRaw = localStorage.getItem(CACHE_KEY);
@@ -328,13 +339,16 @@ export const fetchNewsFeed = async (lang: Language): Promise<NewsItem[]> => {
 };
 
 export const generateViralScript = async (newsItem: NewsItem, lang: Language): Promise<ViralScript> => {
-  
+  const apiKey = getApiKey();
+
   if (!apiKey) {
     throw new Error(lang === 'PT' 
       ? "ERRO: Chave da API não configurada. Configure a variável 'API_KEY' no Vercel."
       : "ERROR: API Key missing. Please set 'API_KEY' in Vercel Environment Variables.");
   }
 
+  // Initialize GenAI locally
+  const genAI = new GoogleGenAI({ apiKey });
   const model = "gemini-2.5-flash";
   
   const langInstruction = lang === 'PT' 
