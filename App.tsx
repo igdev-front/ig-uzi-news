@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { NewsFeed } from './components/InputSection'; 
@@ -36,6 +37,7 @@ const AppContent: React.FC = () => {
       const script = await generateViralScript(newsItem, lang);
       setCurrentScript(script);
     } catch (err: any) {
+      console.error(err);
       setError(err.message || t.error);
     } finally {
       setIsGenerating(false);
@@ -96,8 +98,12 @@ const AppContent: React.FC = () => {
       <main className="w-full">
         
         {error && (
-          <div className="max-w-5xl mx-auto mt-8 mb-8 bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl flex items-center justify-center font-mono text-sm">
-            <span className="mr-2">⚠️</span> {error}
+          <div className="max-w-5xl mx-auto mt-8 mb-8 bg-red-900/20 border border-red-500/50 text-red-200 p-6 rounded-xl flex items-start gap-3 font-mono text-sm">
+             <span className="text-xl">⚠️</span> 
+             <div>
+               <p className="font-bold mb-1">ERRO DE SISTEMA / SYSTEM ERROR</p>
+               <p>{error}</p>
+             </div>
           </div>
         )}
 

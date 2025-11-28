@@ -2,7 +2,10 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { NewsItem, ViralScript, Language } from "../types";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Setup Gemini Client
+// Note: In Vercel, ensure 'API_KEY' is set in Environment Variables
+const apiKey = process.env.API_KEY; 
+const genAI = new GoogleGenAI({ apiKey: apiKey || '' }); 
 
 // API KEYS
 const GNEWS_API_KEY = "84423fc4f35e5fc6615e22b416491858";
@@ -14,7 +17,7 @@ const NEWSAPI_URL = `https://newsapi.org/v2/top-headlines?country=us&pageSize=20
 
 // --- LOCAL STORAGE CACHE CONFIG ---
 export const CACHE_DURATION_MS = 12 * 60 * 60 * 1000; // 12 Hours
-export const CACHE_VERSION = 'v7'; // Bump version
+export const CACHE_VERSION = 'v8'; // Bump version to force refresh on deploy
 
 export const getCacheKey = (lang: Language) => `ig_uzi_news_${CACHE_VERSION}_cache_${lang}`;
 
@@ -160,23 +163,46 @@ async function fetchGNewsArticles() {
   }
 }
 
-// Helper to fetch from NewsAPI
+// Helper to fetch from NewsAPI with CORS Proxy fallback
 async function fetchNewsAPIArticles() {
   try {
-    console.log("Fetching NewsAPI.org...");
+    console.log("Fetching NewsAPI.org (Direct)...");
     const response = await fetch(NEWSAPI_URL);
-    if (!response.ok) throw new Error(`NewsAPI error: ${response.status}`);
+    if (!response.ok) {
+       // If direct fetch fails (likely CORS on Vercel), try Proxy
+       throw new Error(`NewsAPI Direct error: ${response.status}`);
+    }
     const data = await response.json();
     return data.articles || [];
   } catch (error) {
-    console.warn("Failed to fetch from NewsAPI (likely CORS if in browser):", error);
-    return [];
+    console.warn("Direct fetch failed, trying Proxy...", error);
+    try {
+       // Use allorigins as a simple CORS proxy
+       const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(NEWSAPI_URL)}`;
+       const response = await fetch(proxyUrl);
+       if (!response.ok) throw new Error("Proxy failed");
+       const data = await response.json();
+       return data.articles || [];
+    } catch (proxyError) {
+       console.warn("Proxy fetch failed:", proxyError);
+       return [];
+    }
   }
 }
 
 export const fetchNewsFeed = async (lang: Language): Promise<NewsItem[]> => {
   const model = "gemini-2.5-flash";
   const CACHE_KEY = getCacheKey(lang);
+
+  // Check if API Key is configured
+  if (!apiKey) {
+    console.error("Gemini API Key is missing! Check your Vercel Environment Variables.");
+    // We don't throw here for the Feed, we return Fallback so the site isn't blank
+    return FALLBACK_NEWS.map(item => ({
+        ...item,
+        date: new Date().toLocaleDateString(lang === 'PT' ? 'pt-BR' : 'en-US', { month: 'short', day: 'numeric' }),
+    }));
+  }
 
   // 1. Check Cache
   const cachedRaw = localStorage.getItem(CACHE_KEY);
@@ -302,6 +328,13 @@ export const fetchNewsFeed = async (lang: Language): Promise<NewsItem[]> => {
 };
 
 export const generateViralScript = async (newsItem: NewsItem, lang: Language): Promise<ViralScript> => {
+  
+  if (!apiKey) {
+    throw new Error(lang === 'PT' 
+      ? "ERRO: Chave da API não configurada. Configure a variável 'API_KEY' no Vercel."
+      : "ERROR: API Key missing. Please set 'API_KEY' in Vercel Environment Variables.");
+  }
+
   const model = "gemini-2.5-flash";
   
   const langInstruction = lang === 'PT' 
