@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ViralScript, Language } from '../types';
 import { Button } from './Button';
-import { Copy, ArrowLeft, Clock, Monitor, Type, Activity, TrendingUp, Anchor, Heart } from 'lucide-react';
+import { Copy, ArrowLeft, Clock, Monitor, Type, Activity, TrendingUp, Anchor, Heart, Languages } from 'lucide-react';
 
 interface ScriptOutputProps {
   script: ViralScript;
@@ -13,6 +13,7 @@ interface ScriptOutputProps {
 export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lang }) => {
   const [copiedPromptId, setCopiedPromptId] = useState<number | null>(null);
   const [fontSize, setFontSize] = useState(32); // Font size for teleprompter
+  const [translatePrompts, setTranslatePrompts] = useState(false); // Toggle state for prompt translation
 
   const translations = {
     PT: {
@@ -28,7 +29,9 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
       score: 'PONTUAÇÃO',
       hook: 'GANCHO',
       retention: 'RETENÇÃO',
-      trigger: 'GATILHO'
+      trigger: 'GATILHO',
+      translate: 'Traduzir',
+      original: 'Original'
     },
     EN: {
       back: 'Back to Feed',
@@ -43,7 +46,9 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
       score: 'SCORE',
       hook: 'HOOK',
       retention: 'RETENTION',
-      trigger: 'TRIGGER'
+      trigger: 'TRIGGER',
+      translate: 'Translate',
+      original: 'Original'
     }
   };
 
@@ -56,9 +61,10 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
   };
 
   const copyAllPrompts = () => {
+    // Always copy the ENGLISH prompts regardless of view mode, as that's what tools need
     const allText = script.scenes.map(s => s.prompt).join('\n\n');
     navigator.clipboard.writeText(allText);
-    alert(lang === 'PT' ? "Prompts copiados!" : "Prompts copied!");
+    alert(lang === 'PT' ? "Prompts (Inglês) copiados!" : "Prompts (English) copied!");
   };
 
   // Safe check if analysis exists (for old scripts/types)
@@ -204,17 +210,33 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
         {/* RIGHT: SCENES (Utility Area) */}
         <div className="flex-1 lg:flex-[1] bg-[#050505] flex flex-col border-l border-white/5">
           
-          <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-[#050505] sticky top-0 z-10">
+          <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-[#050505] sticky top-0 z-10 gap-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
               <Monitor className="w-3 h-3" />
               {t.scenes}
             </span>
-            <button 
-              onClick={copyAllPrompts}
-              className="text-[10px] font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1 uppercase tracking-wider bg-brand-500/10 px-2 py-1 rounded transition-colors"
-            >
-              <Copy className="w-3 h-3"/> {t.copyAll}
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setTranslatePrompts(!translatePrompts)}
+                className={`text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider px-2 py-1 rounded transition-colors
+                  ${translatePrompts 
+                    ? 'text-white bg-slate-700' 
+                    : 'text-slate-500 hover:text-white bg-transparent'
+                  }`}
+                title={translatePrompts ? "Show Original (English)" : "Show Translation (PT)"}
+              >
+                <Languages className="w-3 h-3" />
+                {translatePrompts ? 'PT' : 'EN'}
+              </button>
+              
+              <button 
+                onClick={copyAllPrompts}
+                className="text-[10px] font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1 uppercase tracking-wider bg-brand-500/10 px-2 py-1 rounded transition-colors"
+              >
+                <Copy className="w-3 h-3"/> {t.copyAll}
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#08080a]">
@@ -233,6 +255,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
                       </span>
                    </div>
                    <button 
+                      // Always copy the ENGLISH prompt
                       onClick={() => copyPrompt(scene.prompt, scene.id)}
                       className="text-slate-600 hover:text-white transition-colors"
                    >
@@ -245,7 +268,10 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
                  
                  <div className="rounded p-2 border border-white/5 bg-black/20">
                     <p className="text-[11px] text-slate-400 leading-relaxed font-light">
-                      <span className="text-slate-300/80 selection:bg-brand-500/30">{scene.prompt}</span>
+                      {/* Toggle between Translated and Original Prompt */}
+                      <span className="text-slate-300/80 selection:bg-brand-500/30">
+                        {(translatePrompts && scene.prompt_pt) ? scene.prompt_pt : scene.prompt}
+                      </span>
                     </p>
                  </div>
                </div>

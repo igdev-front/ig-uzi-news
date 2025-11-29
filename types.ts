@@ -34,7 +34,8 @@ export interface ViralScript {
 export interface ImagePrompt {
   id: number;
   description: string; // Internal description
-  prompt: string; // Optimised for Midjourney/Leonardo
+  prompt: string; // Optimised for Midjourney/Leonardo (English)
+  prompt_pt?: string; // Portuguese Translation for reference
 }
 
 export interface GeneratorFormData {

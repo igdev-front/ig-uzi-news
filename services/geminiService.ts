@@ -133,9 +133,10 @@ const scriptSchema: Schema = {
         properties: {
           id: { type: Type.INTEGER },
           description: { type: Type.STRING, description: "Brief visual description for the editor" },
-          prompt: { type: Type.STRING, description: "High fidelity English prompt for ImageFX. Style: Casual Photo, Realism, 8K. NO ANIMATION. NO CINEMATIC." }
+          prompt: { type: Type.STRING, description: "High fidelity English prompt for ImageFX. Style: Casual Photo, Realism, 8K. NO ANIMATION. NO CINEMATIC." },
+          prompt_pt: { type: Type.STRING, description: "Portuguese translation of the prompt for reference." }
         },
-        required: ["id", "description", "prompt"]
+        required: ["id", "description", "prompt", "prompt_pt"]
       }
     },
     viralAnalysis: {
@@ -383,7 +384,8 @@ export const generateViralScript = async (newsItem: NewsItem, lang: Language): P
     
     2. GENERATE 20 ART PROMPTS (OPTIMIZED FOR IMAGE FX).
        - Create exactly 20 distinct image prompts.
-       - Prompts must be in English (regardless of script language).
+       - "prompt": Must be in English (regardless of script language).
+       - "prompt_pt": Provide a Portuguese translation of the prompt for the user.
        - STYLE: CASUAL PHOTOGRAPHY, REALISM, 8K, RAW FOOTAGE.
        - NEGATIVE CONSTRAINTS: NO Animation, NO Cinematic filters, NO 3D render style, NO Cartoons.
        - The images must look like they were taken by a witness in the USA with a high-end smartphone or a photojournalist.
