@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ViralScript, Language } from '../types';
 import { Button } from './Button';
-import { Copy, ArrowLeft, Clock, Monitor, Type, Activity, TrendingUp, Anchor, Heart, Languages } from 'lucide-react';
+import { Copy, ArrowLeft, Clock, Monitor, Type, Activity, TrendingUp, Anchor, Heart, Languages, Check } from 'lucide-react';
 
 interface ScriptOutputProps {
   script: ViralScript;
@@ -23,7 +23,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
       copyAll: 'Copiar Tudo',
       duration: 'Duração',
       words: 'Palavras',
-      copied: 'COPIADO',
+      copied: 'COPIADO!',
       fontSize: 'Tamanho do Texto',
       analysis: 'ANÁLISE VIRAL (IA)',
       score: 'PONTUAÇÃO',
@@ -40,7 +40,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
       copyAll: 'Copy All',
       duration: 'Duration',
       words: 'Words',
-      copied: 'COPIED',
+      copied: 'COPIED!',
       fontSize: 'Text Size',
       analysis: 'VIRAL ANALYSIS (AI)',
       score: 'SCORE',
@@ -81,6 +81,9 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
     if (score >= 70) return 'text-yellow-500';
     return 'text-red-500';
   };
+
+  // Shared Card Style for HUD items to match Scene List
+  const cardStyle = "bg-[#0f0f11] border border-white/5 rounded p-3 hover:border-white/20 transition-all relative flex flex-col items-center justify-center text-center";
 
   return (
     <div className="w-full h-[calc(100vh-80px)] flex flex-col animate-fade-in-up bg-[#020202] font-sans">
@@ -123,8 +126,8 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
            <div className="shrink-0 bg-[#08080a] border-b border-white/5 p-4 grid grid-cols-2 md:grid-cols-4 gap-4 z-20">
               
               {/* Score Card */}
-              <div className="bg-[#0e0e11] rounded p-3 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group/card">
-                 <div className="absolute top-0 right-0 w-8 h-8 bg-brand-500/10 rounded-bl-xl"></div>
+              <div className={cardStyle}>
+                 <div className="absolute top-0 right-0 w-8 h-8 bg-brand-500/10 rounded-bl-xl pointer-events-none"></div>
                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{t.score}</span>
                  <div className={`text-3xl font-black ${getScoreColor(analysis.score)} flex items-center gap-1`}>
                     <Activity className="w-5 h-5 opacity-50" />
@@ -133,7 +136,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
               </div>
 
               {/* Hook Strength */}
-              <div className="bg-[#0e0e11] rounded p-3 border border-white/5 flex flex-col items-center justify-center">
+              <div className={cardStyle}>
                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{t.hook}</span>
                  <div className="text-lg font-bold text-white flex items-center gap-2">
                     <Anchor className="w-4 h-4 text-brand-400" />
@@ -142,7 +145,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
               </div>
 
               {/* Retention */}
-              <div className="bg-[#0e0e11] rounded p-3 border border-white/5 flex flex-col items-center justify-center">
+              <div className={cardStyle}>
                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{t.retention}</span>
                  <div className="text-lg font-bold text-white flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-highlight-400" />
@@ -151,7 +154,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
               </div>
 
                {/* Emotional Trigger */}
-               <div className="bg-[#0e0e11] rounded p-3 border border-white/5 flex flex-col items-center justify-center">
+               <div className={cardStyle}>
                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{t.trigger}</span>
                  <div className="text-lg font-bold text-white flex items-center gap-2">
                     <Heart className="w-4 h-4 text-red-500" />
@@ -161,10 +164,10 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
            </div>
 
            {/* Tech Overlay lines */}
-           <div className="absolute top-20 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-900/20 to-transparent pointer-events-none"></div>
+           <div className="absolute top-32 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-900/10 to-transparent pointer-events-none"></div>
            
            {/* Controls Bar (Floating) */}
-           <div className="absolute top-24 right-8 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+           <div className="absolute top-36 right-8 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1 flex items-center gap-3">
                 <Type className="w-3 h-3 text-slate-400" />
                 <input 
@@ -188,7 +191,7 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
                   className="font-medium text-white/90 text-center transition-all duration-200"
                   style={{ 
                     fontSize: `${fontSize}px`, 
-                    lineHeight: '1.5',
+                    lineHeight: '1.5', 
                     textShadow: '0 0 30px rgba(0,0,0,0.8)' 
                   }}
                 >
@@ -258,15 +261,25 @@ export const ScriptOutput: React.FC<ScriptOutputProps> = ({ script, onReset, lan
                       // Always copy the ENGLISH prompt
                       onClick={() => copyPrompt(scene.prompt, scene.id)}
                       className="text-slate-600 hover:text-white transition-colors"
+                      title={t.copyAll}
                    >
                       {copiedPromptId === scene.id 
-                        ? <span className="text-[10px] font-bold text-green-500">{t.copied}</span> 
+                        ? <Check className="w-3 h-3 text-green-500" />
                         : <Copy className="w-3 h-3" />
                       }
                    </button>
                  </div>
                  
-                 <div className="rounded p-2 border border-white/5 bg-black/20">
+                 <div className="rounded p-2 border border-white/5 bg-black/20 relative group/prompt overflow-hidden">
+                    {/* Copied Overlay */}
+                    {copiedPromptId === scene.id && (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0f0f11]/90 backdrop-blur-[1px] animate-in fade-in duration-200">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-green-400 uppercase tracking-wider">
+                          <Check className="w-3.5 h-3.5" /> {t.copied}
+                        </span>
+                      </div>
+                    )}
+
                     <p className="text-[11px] text-slate-400 leading-relaxed font-light">
                       {/* Toggle between Translated and Original Prompt */}
                       <span className="text-slate-300/80 selection:bg-brand-500/30">
